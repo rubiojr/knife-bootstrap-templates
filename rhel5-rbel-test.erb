@@ -1,0 +1,49 @@
+bash -c '
+(
+ARCH=$(uname -m)
+cat <<'EOP'
+[ruby-test]
+name = ruby-test
+baseurl = http://rbel.frameos.org/ruby-test/el5/$ARCH
+gpgcheck = 0
+enabled = 1
+EOP
+) > /etc/yum.repos.d/ruby-test.repo
+
+if [ ! -f /usr/bin/chef-client ]; then
+  cd /tmp
+  rpm -Uvh http://rbel.frameos.org/rbel5
+  yum install -y ruby rubygem-chef
+else
+  echo Chef already installed here. Aborting.
+  exit 1
+fi
+
+# install ntp, clock is important
+yum install -y ntp
+
+mkdir -p /etc/chef
+
+(
+cat <<'EOP'
+<%= validation_key %>
+EOP
+) > /tmp/validation.pem
+awk NF /tmp/validation.pem > /etc/chef/validation.pem
+rm /tmp/validation.pem
+
+(
+cat <<'EOP'
+<%= config_content %>
+EOP
+) > /etc/chef/client.rb
+
+(
+cat <<'EOP'
+<%= { "run_list" => @run_list }.to_json %>
+EOP
+) > /etc/chef/first-boot.json
+
+ntpdate -s pool.ntp.org
+chkconfig chef-client on
+<%= start_chef %>'
