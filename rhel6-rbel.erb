@@ -1,7 +1,7 @@
 bash -c '
 if [ ! -f /usr/bin/chef-client ]; then
   cd /tmp
-  rpm -Uvh http://rbel.frameos.org/rbel5
+  rpm -Uvh http://rbel.frameos.org/rbel6
   yum install -y ruby rubygem-chef
 else
   echo Chef already installed here. Aborting.
